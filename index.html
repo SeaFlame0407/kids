@@ -1,83 +1,103 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>角色名冊</title>
-<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@600;700&display=swap">
 <style>
-/* Layout: sticky header + horizontal 家長 tab rail + responsive character-card grid */
+/* Layout: sticky 家長 tab rail + new/edit form + responsive character-card grid. Supabase backend. */
 :root{
   --bg:#f6f5fb; --surface:#ffffff; --surface-2:#f0edf8; --fg:#221f2b; --muted:#6c6677;
-  --border:#e5e1ef; --accent:#6d5bd0; --accent-soft:#ece8fb;
+  --border:#e5e1ef; --accent:#6d5bd0; --accent-ink:#fff; --accent-soft:#ece8fb; --danger:#c8415b;
   --dragon:#c98a1e; --dragon-bg:#f8edd6; --rabbit:#c85c82; --rabbit-bg:#fae2ea;
   --cat:#1f8d84; --cat-bg:#d8f1ee; --elf:#4f9a3f; --elf-bg:#e2f3dc;
   --font-disp:"Noto Serif TC",serif; --font-body:"Noto Sans TC",system-ui,sans-serif;
 }
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
   --bg:#15131c; --surface:#201d2a; --surface-2:#282334; --fg:#ece9f2; --muted:#a39daf;
-  --border:#322d41; --accent:#a394f2; --accent-soft:#2a2442;
+  --border:#322d41; --accent:#a394f2; --accent-ink:#17121f; --accent-soft:#2a2442; --danger:#ef7d93;
   --dragon:#e4b35c; --dragon-bg:#352a17; --rabbit:#ed93b1; --rabbit-bg:#3a2029;
   --cat:#52c7bc; --cat-bg:#16302d; --elf:#7cc96c; --elf-bg:#1d2f18; color-scheme:dark;
 }}
 :root[data-theme="dark"]{
   --bg:#15131c; --surface:#201d2a; --surface-2:#282334; --fg:#ece9f2; --muted:#a39daf;
-  --border:#322d41; --accent:#a394f2; --accent-soft:#2a2442;
+  --border:#322d41; --accent:#a394f2; --accent-ink:#17121f; --accent-soft:#2a2442; --danger:#ef7d93;
   --dragon:#e4b35c; --dragon-bg:#352a17; --rabbit:#ed93b1; --rabbit-bg:#3a2029;
   --cat:#52c7bc; --cat-bg:#16302d; --elf:#7cc96c; --elf-bg:#1d2f18; color-scheme:dark;
 }
 *{box-sizing:border-box}
-body{background:var(--bg);color:var(--fg);font-family:var(--font-body);line-height:1.5;margin:0}
+html,body{margin:0}
+body{background:var(--bg);color:var(--fg);font-family:var(--font-body);line-height:1.5}
 .wrap{max-width:960px;margin:0 auto;
-  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));}
-header{padding-block:22px 10px}
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+header{padding-block:22px 6px}
 h1{font-family:var(--font-disp);font-weight:700;font-size:clamp(1.5rem,5vw,2rem);margin:0;text-wrap:balance}
 .sub{color:var(--muted);font-size:.9rem;margin-top:4px}
 .sub a{color:var(--accent);text-decoration:none}.sub a:hover{text-decoration:underline}
 .stats{display:flex;gap:18px;flex-wrap:wrap;margin-top:12px;font-size:.85rem;color:var(--muted)}
 .stats b{color:var(--fg);font-size:1.05rem;font-variant-numeric:tabular-nums}
-.note{margin-top:12px;background:var(--surface-2);border:1px solid var(--border);border-radius:10px;
-  padding:10px 13px;font-size:.82rem;color:var(--muted)}
-.note b{color:var(--fg)}
+
+/* setup banner */
+.setup{background:var(--accent-soft);border:1px solid var(--accent);border-radius:12px;
+  padding:16px 18px;margin-top:18px;font-size:.9rem}
+.setup h2{margin:0 0 6px;font-size:1.05rem}
+.setup code{background:var(--surface);padding:1px 6px;border-radius:5px;font-size:.85em}
+
+/* form */
+.panel{background:var(--surface);border:1px solid var(--border);border-radius:14px;
+  padding:16px;margin-top:18px}
+.panel h2{font-family:var(--font-disp);margin:0 0 12px;font-size:1.1rem}
+.form{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.field{display:flex;flex-direction:column;gap:5px;min-width:0}
+.field.full{grid-column:1/-1}
+label{font-size:.8rem;color:var(--muted);letter-spacing:.02em}
+input,textarea,select{font:inherit;color:var(--fg);background:var(--bg);border:1px solid var(--border);
+  border-radius:9px;padding:9px 11px;width:100%;min-width:0}
+input:focus,textarea:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px;border-color:transparent}
+textarea{resize:vertical;min-height:62px}
+.actions{display:flex;gap:9px;flex-wrap:wrap;align-items:center;margin-top:4px}
+.btn{font:inherit;font-size:.9rem;padding:9px 18px;border-radius:999px;cursor:pointer;border:1px solid var(--accent);
+  background:var(--accent);color:var(--accent-ink);font-weight:500}
+.btn:hover{filter:brightness(1.05)}
+.btn.ghost{background:transparent;color:var(--accent)}
+.btn.sm{padding:5px 12px;font-size:.82rem}
+.btn.danger{border-color:var(--danger);color:var(--danger);background:transparent}
+.msg{font-size:.84rem;color:var(--muted)}
+
+.toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:14px;font-size:.84rem;color:var(--muted)}
 
 .tabs{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);
-  display:flex;gap:7px;overflow-x:auto;padding:12px 0;margin-top:4px;
+  display:flex;gap:7px;overflow-x:auto;padding:12px 0;margin-top:10px;
   border-bottom:1px solid var(--border);scrollbar-width:thin}
 .tab{flex:0 0 auto;border:1px solid var(--border);background:var(--surface);color:var(--fg);
   font:inherit;font-size:.9rem;padding:7px 14px;border-radius:999px;cursor:pointer;white-space:nowrap;
-  display:flex;align-items:center;gap:7px;transition:.15s}
+  display:flex;align-items:center;gap:7px}
 .tab:hover{border-color:var(--accent)}
-.tab[aria-selected="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
-.tab .c{font-size:.75rem;background:var(--surface-2);color:var(--muted);border-radius:999px;
-  padding:1px 7px;font-variant-numeric:tabular-nums}
-.tab[aria-selected="true"] .c{background:rgba(255,255,255,.25);color:#fff}
+.tab[aria-selected="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.tab .c{font-size:.75rem;background:var(--surface-2);color:var(--muted);border-radius:999px;padding:1px 7px}
+.tab[aria-selected="true"] .c{background:rgba(125,110,230,.3);color:var(--accent-ink)}
 
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(148px,1fr));gap:14px;
-  padding-block:20px 48px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:14px;padding-block:20px 48px}
 .card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px 14px;
   display:flex;flex-direction:column;align-items:center;text-align:center;gap:9px;min-width:0}
-.ava{width:66px;height:66px;border-radius:50%;display:grid;place-items:center;
-  font-family:var(--font-disp);font-size:1.6rem;font-weight:700;color:#fff;
-  position:relative;flex:0 0 auto}
-.ava::after{content:"待補";position:absolute;bottom:-3px;right:-3px;background:var(--surface-2);
-  color:var(--muted);font-family:var(--font-body);font-size:.58rem;font-weight:400;
-  border:1px solid var(--border);border-radius:999px;padding:1px 6px}
-.name{font-family:var(--font-disp);font-weight:600;font-size:1.02rem;line-height:1.3;
-  word-break:break-word;min-width:0}
-.owner{font-size:.76rem;color:var(--muted)}
-.owner span{color:var(--fg)}
+.ava{width:72px;height:72px;border-radius:50%;object-fit:cover;display:grid;place-items:center;
+  font-family:var(--font-disp);font-size:1.7rem;font-weight:700;color:#fff;flex:0 0 auto;overflow:hidden}
+.name{font-family:var(--font-disp);font-weight:600;font-size:1.02rem;line-height:1.3;word-break:break-word;min-width:0}
 .badge{font-size:.76rem;padding:3px 10px;border-radius:999px;font-weight:500}
-.r-dragon{color:var(--dragon);background:var(--dragon-bg)}
-.r-rabbit{color:var(--rabbit);background:var(--rabbit-bg)}
-.r-cat{color:var(--cat);background:var(--cat-bg)}
-.r-elf{color:var(--elf);background:var(--elf-bg)}
+.r-dragon{color:var(--dragon);background:var(--dragon-bg)}.r-rabbit{color:var(--rabbit);background:var(--rabbit-bg)}
+.r-cat{color:var(--cat);background:var(--cat-bg)}.r-elf{color:var(--elf);background:var(--elf-bg)}
 .r-other{color:var(--muted);background:var(--surface-2)}
-.src{font-size:.75rem;color:var(--muted);padding-bottom:28px}
-.live{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--muted);margin-right:5px;vertical-align:middle}
-.live.on{background:var(--elf)}
+.cnote{font-size:.82rem;color:var(--muted);word-break:break-word}
+.owner{font-size:.76rem;color:var(--muted)}.owner span{color:var(--fg)}
+.cardbtns{display:flex;gap:6px;margin-top:2px}
+.empty{color:var(--muted);text-align:center;padding:40px 0}
 </style>
-
+</head>
+<body>
 <div class="wrap">
   <header>
     <h1>角色名冊</h1>
-    <div class="sub">依家長分頁瀏覽 · 資料來自
-      <a href="https://docs.google.com/spreadsheets/d/1bLLdaiUOdhQf9qHReg1N2fknEhCBU4TOJmwATcwbIMg/edit" target="_blank">Google 試算表</a>
-    </div>
     <div class="stats">
       <span><b id="st-char">0</b> 位角色</span>
       <span><b id="st-owner">0</b> 位家長</span>
@@ -85,124 +105,179 @@ h1{font-family:var(--font-disp);font-weight:700;font-size:clamp(1.5rem,5vw,2rem)
     </div>
   </header>
 
-  <div class="tabs" id="tabs" role="tablist"></div>
-  <div class="grid" id="grid"></div>
-  <div class="src"><span class="live" id="live"></span><span id="src-txt">顯示內建快照資料</span></div>
+  <div id="app" hidden>
+    <div class="panel">
+      <h2 id="form-title">新增角色</h2>
+      <form class="form" id="form">
+        <div class="field"><label for="f-owner">家長</label><input id="f-owner" placeholder="誰的角色"></div>
+        <div class="field"><label for="f-name">角色名 / 綽號 *</label><input id="f-name" required placeholder="必填"></div>
+        <div class="field"><label for="f-race">種族</label>
+          <input id="f-race" list="races" placeholder="如 兔男、龍女">
+          <datalist id="races"><option value="龍女"><option value="兔男"><option value="貓男"><option value="男精"></datalist>
+        </div>
+        <div class="field"><label for="f-ava">證件照 / 頭貼</label><input id="f-ava" type="file" accept="image/*"></div>
+        <div class="field full"><label for="f-note">備註</label><textarea id="f-note" placeholder="設定、個性、其他想記的事"></textarea></div>
+        <div class="field full actions">
+          <button class="btn" type="submit" id="submit-btn">新增</button>
+          <button class="btn ghost" type="button" id="cancel-btn" hidden>取消編輯</button>
+          <span class="msg" id="form-msg"></span>
+        </div>
+      </form>
+    </div>
+
+    <div class="toolbar">
+      <button class="btn ghost sm" id="import-btn" type="button">⬇ 從 Google 試算表匯入現有角色</button>
+      <span class="msg" id="import-msg"></span>
+    </div>
+
+    <div class="tabs" id="tabs" role="tablist"></div>
+    <div class="grid" id="grid"></div>
+  </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script>
-// 從試算表抓下來的快照(第一幀一定完整)。部署到 GitHub Pages 後會再嘗試即時讀取並覆蓋。
-const SNAPSHOT = [
-  {owner:"赫米娜", name:"赫米娜", race:"龍女"},
-  {owner:"77", name:"77", race:"龍女"},
-  {owner:"77", name:"淡皋", race:"男精"},
-  {owner:"77", name:"涅斯特", race:"兔男(黑兔)"},
-  {owner:"77", name:"希洛", race:"兔男(白兔)"},
-  {owner:"維里斯", name:"維里斯/兔寶", race:"兔男"},
-  {owner:"塔維安", name:"埃爾諾", race:"兔男"},
-  {owner:"雞湯", name:"伊利斯", race:"兔男"},
-  {owner:"雞湯", name:"瓦諾", race:"貓男"},
-  {owner:"雞湯", name:"小火龍", race:"龍女"},
-  {owner:"雞湯", name:"敏瑟蘭/薄荷", race:"男精"},
-  {owner:"伊里特", name:"伊醬", race:"兔男"},
-  {owner:"S", name:"萊爾", race:"兔男"},
-  {owner:"S", name:"拉恩", race:"貓男"},
-  {owner:"kari", name:"柯瑟莉亞 · 沃恩", race:"龍女"},
-];
+/* ========= 1. 你的 Supabase 設定(改這兩行) ========= */
+const SUPABASE_URL = "https://ipuccqwdljlecfehsjpn.supabase.co/rest/v1/";
+const SUPABASE_ANON_KEY = "sb_publishable_icxhi9NXTHJpCvoftuXXNw_epPMAZiu";
+/* 想用「一鍵匯入」就填你的試算表 ID(網址 /d/ 後面那串) */
 const SHEET_ID = "1bLLdaiUOdhQf9qHReg1N2fknEhCBU4TOJmwATcwbIMg";
+/* =================================================== */
 
-let data = SNAPSHOT.slice();
-let active = 0; // 0 = 全部
+let db=null, rows=[], active=0, editingId=null;
+const $=id=>document.getElementById(id);
+const esc=s=>String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 
-function raceClass(r){
-  if(r.includes("龍"))return"r-dragon";
-  if(r.includes("兔"))return"r-rabbit";
-  if(r.includes("貓"))return"r-cat";
-  if(r.includes("精"))return"r-elf";
-  return"r-other";
-}
-function raceVar(r){
-  if(r.includes("龍"))return"var(--dragon)";
-  if(r.includes("兔"))return"var(--rabbit)";
-  if(r.includes("貓"))return"var(--cat)";
-  if(r.includes("精"))return"var(--elf)";
-  return"var(--accent)";
-}
-function initial(name){
-  const ch=[...name].find(c=>/[^\s\/·.。、,，]/.test(c));
-  return ch||"?";
-}
-function owners(){
-  const seen=[];for(const d of data){if(!seen.includes(d.owner))seen.push(d.owner);}return seen;
-}
+function configured(){return !SUPABASE_URL.includes("YOUR-PROJECT") && !SUPABASE_ANON_KEY.includes("YOUR-ANON-KEY");}
+function raceClass(r){r=r||"";if(r.includes("龍"))return"r-dragon";if(r.includes("兔"))return"r-rabbit";if(r.includes("貓"))return"r-cat";if(r.includes("精"))return"r-elf";return"r-other";}
+function raceVar(r){r=r||"";if(r.includes("龍"))return"var(--dragon)";if(r.includes("兔"))return"var(--rabbit)";if(r.includes("貓"))return"var(--cat)";if(r.includes("精"))return"var(--elf)";return"var(--accent)";}
+function initial(n){const ch=[...(n||"?")].find(c=>/[^\s\/·.。、,，]/.test(c));return ch||"?";}
+function ownerName(o){return (o&&o.trim())?o.trim():"未分類";}
+function owners(){const s=[];for(const r of rows){const o=ownerName(r.owner);if(!s.includes(o))s.push(o);}return s;}
 
-function renderTabs(){
+function render(){
+  $("st-char").textContent=rows.length;
+  $("st-owner").textContent=owners().length;
+  $("st-race").textContent=new Set(rows.map(r=>raceClass(r.race))).size;
   const os=owners();
-  const tabs=document.getElementById("tabs");
-  const mk=(label,count,idx)=>`<button class="tab" role="tab" aria-selected="${active===idx}" onclick="select(${idx})">${label}<span class="c">${count}</span></button>`;
-  let html=mk("全部",data.length,0);
-  os.forEach((o,i)=>{html+=mk(o,data.filter(d=>d.owner===o).length,i+1);});
-  tabs.innerHTML=html;
+  if(active>os.length)active=0;
+  const mk=(label,count,idx)=>`<button class="tab" role="tab" aria-selected="${active===idx}" onclick="selectTab(${idx})">${esc(label)}<span class="c">${count}</span></button>`;
+  let t=mk("全部",rows.length,0);
+  os.forEach((o,i)=>{t+=mk(o,rows.filter(r=>ownerName(r.owner)===o).length,i+1);});
+  $("tabs").innerHTML=t;
+  const list=active===0?rows:rows.filter(r=>ownerName(r.owner)===os[active-1]);
+  if(!list.length){$("grid").innerHTML=`<div class="empty" style="grid-column:1/-1">還沒有角色,用上面的表單新增第一個吧。</div>`;return;}
+  $("grid").innerHTML=list.map(r=>{
+    const ava=r.avatar_url
+      ? `<img class="ava" src="${esc(r.avatar_url)}" alt="${esc(r.name)}">`
+      : `<div class="ava" style="background:linear-gradient(135deg,${raceVar(r.race)},${raceVar(r.race)}99)">${esc(initial(r.name))}</div>`;
+    return `<div class="card">
+      ${ava}
+      <div class="name">${esc(r.name)}</div>
+      ${r.race?`<div class="badge ${raceClass(r.race)}">${esc(r.race)}</div>`:""}
+      ${active===0?`<div class="owner">家長 · <span>${esc(ownerName(r.owner))}</span></div>`:""}
+      ${r.note?`<div class="cnote">${esc(r.note)}</div>`:""}
+      <div class="cardbtns">
+        <button class="btn ghost sm" onclick="startEdit('${r.id}')">編輯</button>
+        <button class="btn danger sm" onclick="del('${r.id}','${esc(r.name)}')">刪除</button>
+      </div>
+    </div>`;}).join("");
 }
-function renderGrid(){
-  const os=owners();
-  const list = active===0 ? data : data.filter(d=>d.owner===os[active-1]);
-  const grid=document.getElementById("grid");
-  grid.innerHTML=list.map(d=>`
-    <div class="card">
-      <div class="ava" style="background:linear-gradient(135deg,${raceVar(d.race)},${raceVar(d.race)}99)">${initial(d.name)}</div>
-      <div class="name">${esc(d.name)}</div>
-      <div class="badge ${raceClass(d.race)}">${esc(d.race)}</div>
-      ${active===0?`<div class="owner">家長 · <span>${esc(d.owner)}</span></div>`:""}
-    </div>`).join("");
-}
-function renderStats(){
-  document.getElementById("st-char").textContent=data.length;
-  document.getElementById("st-owner").textContent=owners().length;
-  document.getElementById("st-race").textContent=new Set(data.map(d=>raceClass(d.race))).size;
-}
-function esc(s){return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));}
-function select(i){active=i;renderTabs();renderGrid();try{location.hash="t"+i;}catch(e){}}
-function renderAll(){renderStats();renderTabs();renderGrid();}
+window.selectTab=i=>{active=i;render();};
 
-// 一個小 CSV 解析器(處理引號)
-function parseCSV(text){
-  const rows=[];let row=[],f="",q=false;
-  for(let i=0;i<text.length;i++){const c=text[i];
-    if(q){if(c=='"'){if(text[i+1]=='"'){f+='"';i++;}else q=false;}else f+=c;}
-    else{if(c=='"')q=true;else if(c==',')	{row.push(f);f="";}
-      else if(c=='\n'){row.push(f);rows.push(row);row=[];f="";}
-      else if(c=='\r'){}else f+=c;}}
-  if(f.length||row.length){row.push(f);rows.push(row);}
-  return rows;
+async function load(){
+  const {data,error}=await db.from("characters").select("*").order("created_at",{ascending:true});
+  if(error){$("form-msg").textContent="讀取失敗:"+error.message;return;}
+  rows=data||[];render();
 }
-function buildFromRows(rows){
-  let start=rows.findIndex(r=>r.some(c=>c&&c.includes("家長")));
-  if(start<0)return null;
-  const out=[];let owner="";
-  for(let i=start+1;i<rows.length;i++){
-    const r=rows[i];const o=(r[0]||"").trim(),n=(r[1]||"").trim(),race=(r[2]||"").trim();
-    if(o)owner=o;
-    if(!race&&!n){continue;}
-    out.push({owner:owner,name:n||owner,race:race||"未填"});
-  }
-  return out.length?out:null;
+
+async function uploadAvatar(file){
+  const ext=(file.name.split(".").pop()||"png").toLowerCase();
+  const path=crypto.randomUUID()+"."+ext;
+  const {error}=await db.storage.from("avatars").upload(path,file,{upsert:false});
+  if(error)throw error;
+  return db.storage.from("avatars").getPublicUrl(path).data.publicUrl;
 }
-// 部署到 GitHub Pages 後會成功(artifact 沙盒會擋外部連線,靜默用快照)。
-async function tryLive(){
+
+$("form").addEventListener("submit",async e=>{
+  e.preventDefault();
+  const btn=$("submit-btn");btn.disabled=true;
+  const msg=$("form-msg");msg.textContent="處理中…";
+  try{
+    const rec={owner:$("f-owner").value.trim(),name:$("f-name").value.trim(),
+      race:$("f-race").value.trim(),note:$("f-note").value.trim()};
+    const file=$("f-ava").files[0];
+    if(file)rec.avatar_url=await uploadAvatar(file);
+    if(editingId){
+      const {error}=await db.from("characters").update(rec).eq("id",editingId);
+      if(error)throw error;
+    }else{
+      const {error}=await db.from("characters").insert(rec);
+      if(error)throw error;
+    }
+    resetForm();msg.textContent="已儲存 ✓";await load();
+  }catch(err){msg.textContent="失敗:"+(err.message||err);}
+  finally{btn.disabled=false;}
+});
+
+window.startEdit=id=>{
+  const r=rows.find(x=>x.id===id);if(!r)return;
+  editingId=id;
+  $("f-owner").value=r.owner||"";$("f-name").value=r.name||"";
+  $("f-race").value=r.race||"";$("f-note").value=r.note||"";$("f-ava").value="";
+  $("form-title").textContent="編輯角色";$("submit-btn").textContent="更新";
+  $("cancel-btn").hidden=false;$("form-msg").textContent="(不選檔案則保留原頭貼)";
+  window.scrollTo({top:0,behavior:"smooth"});
+};
+$("cancel-btn").addEventListener("click",resetForm);
+function resetForm(){
+  editingId=null;$("form").reset();
+  $("form-title").textContent="新增角色";$("submit-btn").textContent="新增";
+  $("cancel-btn").hidden=true;$("form-msg").textContent="";
+}
+
+window.del=async(id,name)=>{
+  if(!window.confirm(`確定刪除「${name}」?`))return;
+  const {error}=await db.from("characters").delete().eq("id",id);
+  if(error){alert("刪除失敗:"+error.message);return;}
+  await load();
+};
+
+/* ---- 一鍵從 Google 試算表匯入(照片除外) ---- */
+function parseCSV(text){const rows=[];let row=[],f="",q=false;for(let i=0;i<text.length;i++){const c=text[i];
+  if(q){if(c=='"'){if(text[i+1]=='"'){f+='"';i++;}else q=false;}else f+=c;}
+  else{if(c=='"')q=true;else if(c==','){row.push(f);f="";}else if(c=='\n'){row.push(f);rows.push(row);row=[];f="";}else if(c=='\r'){}else f+=c;}}
+  if(f.length||row.length){row.push(f);rows.push(row);}return rows;}
+$("import-btn").addEventListener("click",async()=>{
+  const m=$("import-msg");m.textContent="讀取試算表中…";
   try{
     const url=`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&gid=0`;
-    const res=await fetch(url);if(!res.ok)throw 0;
-    const built=buildFromRows(parseCSV(await res.text()));
-    if(built&&built.length){data=built;active=0;renderAll();
-      document.getElementById("live").classList.add("on");
-      document.getElementById("src-txt").textContent="即時讀取自 Google 試算表";}
-  }catch(e){/* 保持快照 */}
+    const csv=await (await fetch(url)).text();
+    const rr=parseCSV(csv);
+    let start=rr.findIndex(r=>r.some(c=>c&&c.includes("家長")));if(start<0)throw new Error("找不到標題列");
+    let owner="";const incoming=[];
+    for(let i=start+1;i<rr.length;i++){const r=rr[i];const o=(r[0]||"").trim(),n=(r[1]||"").trim(),race=(r[2]||"").trim();
+      if(o)owner=o;if(!n&&!race)continue;incoming.push({owner,name:n||owner,race});}
+    const have=new Set(rows.map(r=>ownerName(r.owner)+"|"+r.name));
+    const toAdd=incoming.filter(r=>!have.has(ownerName(r.owner)+"|"+r.name));
+    if(!toAdd.length){m.textContent="沒有新角色可匯入(都已存在)。";return;}
+    const {error}=await db.from("characters").insert(toAdd);
+    if(error)throw error;
+    m.textContent=`已匯入 ${toAdd.length} 位角色(頭貼需另外上傳)。`;await load();
+  }catch(err){m.textContent="匯入失敗:"+(err.message||err);}
+});
+
+/* ---- 啟動 ---- */
+if(!configured()){
+  $("setup").hidden=false;
+}else{
+  db=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
+  $("app").hidden=false;
+  load();
+  db.channel("characters-realtime")
+    .on("postgres_changes",{event:"*",schema:"public",table:"characters"},load)
+    .subscribe();
 }
-
-renderAll();
-try{const m=(location.hash||"").match(/^#t(\d+)$/);if(m)active=+m[1];}catch(e){}
-renderAll();
-tryLive();
 </script>
-
+</body>
+</html>
