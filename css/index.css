@@ -1,1 +1,37 @@
 
+/* === 自訂樣式(Tailwind 以外的部分) === */
+
+.custom-scrollbar::-webkit-scrollbar { width: 4px; }
+.custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(150, 150, 150, 0.4); border-radius: 4px; }
+
+/* === 各主題專屬背景 === */
+.bg-library-paper {
+  background-color: #f4ebd0;
+  background-image: radial-gradient(rgba(120, 80, 40, 0.08) 15%, transparent 16%);
+  background-size: 20px 20px;
+}
+.bg-cyber-grid {
+  background-image: linear-gradient(rgba(236, 72, 153, 0.08) 1px, transparent 1px),
+                    linear-gradient(90deg, rgba(236, 72, 153, 0.08) 1px, transparent 1px);
+  background-size: 24px 24px;
+  background-color: #030712;
+}
+.bg-pure-white {
+  background: radial-gradient(circle at 50% 0%, rgba(243, 244, 246, 1) 0%, rgba(229, 231, 235, 0.6) 100%), #ffffff;
+}
+.bg-oled-black {
+  background-color: #000000;
+  background-image: radial-gradient(circle at 50% 50%, rgba(38, 38, 38, 0.4) 0%, transparent 70%);
+}
+
+/* 翻頁動畫 */
+.book-page-turn { animation: pageTurn 0.5s ease-in-out; }
+@keyframes pageTurn {
+  0% { opacity: 0.3; transform: scale(0.98); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+/* 賽博警示條紋 */
+.cyber-warning-stripe {
+  background: repeating-linear-gradient(-45deg, #f43f5e, #f43f5e 8px, #0f172a 8px, #0f172a 16px);
+}
