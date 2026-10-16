@@ -1,283 +1,191 @@
-<!doctype html>
-<html lang="zh-Hant">
+<!DOCTYPE html>
+<html lang="zh-TW">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>角色名冊</title>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@600;700&display=swap">
-<style>
-/* Layout: sticky 家長 tab rail + new/edit form + responsive character-card grid. Supabase backend. */
-:root{
-  --bg:#f6f5fb; --surface:#ffffff; --surface-2:#f0edf8; --fg:#221f2b; --muted:#6c6677;
-  --border:#e5e1ef; --accent:#6d5bd0; --accent-ink:#fff; --accent-soft:#ece8fb; --danger:#c8415b;
-  --dragon:#c98a1e; --dragon-bg:#f8edd6; --rabbit:#c85c82; --rabbit-bg:#fae2ea;
-  --cat:#1f8d84; --cat-bg:#d8f1ee; --elf:#4f9a3f; --elf-bg:#e2f3dc;
-  --font-disp:"Noto Serif TC",serif; --font-body:"Noto Sans TC",system-ui,sans-serif;
-}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
-  --bg:#15131c; --surface:#201d2a; --surface-2:#282334; --fg:#ece9f2; --muted:#a39daf;
-  --border:#322d41; --accent:#a394f2; --accent-ink:#17121f; --accent-soft:#2a2442; --danger:#ef7d93;
-  --dragon:#e4b35c; --dragon-bg:#352a17; --rabbit:#ed93b1; --rabbit-bg:#3a2029;
-  --cat:#52c7bc; --cat-bg:#16302d; --elf:#7cc96c; --elf-bg:#1d2f18; color-scheme:dark;
-}}
-:root[data-theme="dark"]{
-  --bg:#15131c; --surface:#201d2a; --surface-2:#282334; --fg:#ece9f2; --muted:#a39daf;
-  --border:#322d41; --accent:#a394f2; --accent-ink:#17121f; --accent-soft:#2a2442; --danger:#ef7d93;
-  --dragon:#e4b35c; --dragon-bg:#352a17; --rabbit:#ed93b1; --rabbit-bg:#3a2029;
-  --cat:#52c7bc; --cat-bg:#16302d; --elf:#7cc96c; --elf-bg:#1d2f18; color-scheme:dark;
-}
-*{box-sizing:border-box}
-html,body{margin:0}
-body{background:var(--bg);color:var(--fg);font-family:var(--font-body);line-height:1.5}
-.wrap{max-width:960px;margin:0 auto;
-  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
-header{padding-block:22px 6px}
-h1{font-family:var(--font-disp);font-weight:700;font-size:clamp(1.5rem,5vw,2rem);margin:0;text-wrap:balance}
-.sub{color:var(--muted);font-size:.9rem;margin-top:4px}
-.sub a{color:var(--accent);text-decoration:none}.sub a:hover{text-decoration:underline}
-.stats{display:flex;gap:18px;flex-wrap:wrap;margin-top:12px;font-size:.85rem;color:var(--muted)}
-.stats b{color:var(--fg);font-size:1.05rem;font-variant-numeric:tabular-nums}
-
-/* setup banner */
-.setup{background:var(--accent-soft);border:1px solid var(--accent);border-radius:12px;
-  padding:16px 18px;margin-top:18px;font-size:.9rem}
-.setup h2{margin:0 0 6px;font-size:1.05rem}
-.setup code{background:var(--surface);padding:1px 6px;border-radius:5px;font-size:.85em}
-
-/* form */
-.panel{background:var(--surface);border:1px solid var(--border);border-radius:14px;
-  padding:16px;margin-top:18px}
-.panel h2{font-family:var(--font-disp);margin:0 0 12px;font-size:1.1rem}
-.form{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.field{display:flex;flex-direction:column;gap:5px;min-width:0}
-.field.full{grid-column:1/-1}
-label{font-size:.8rem;color:var(--muted);letter-spacing:.02em}
-input,textarea,select{font:inherit;color:var(--fg);background:var(--bg);border:1px solid var(--border);
-  border-radius:9px;padding:9px 11px;width:100%;min-width:0}
-input:focus,textarea:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px;border-color:transparent}
-textarea{resize:vertical;min-height:62px}
-.actions{display:flex;gap:9px;flex-wrap:wrap;align-items:center;margin-top:4px}
-.btn{font:inherit;font-size:.9rem;padding:9px 18px;border-radius:999px;cursor:pointer;border:1px solid var(--accent);
-  background:var(--accent);color:var(--accent-ink);font-weight:500}
-.btn:hover{filter:brightness(1.05)}
-.btn.ghost{background:transparent;color:var(--accent)}
-.btn.sm{padding:5px 12px;font-size:.82rem}
-.btn.danger{border-color:var(--danger);color:var(--danger);background:transparent}
-.msg{font-size:.84rem;color:var(--muted)}
-
-.toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:14px;font-size:.84rem;color:var(--muted)}
-
-.tabs{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);
-  display:flex;gap:7px;overflow-x:auto;padding:12px 0;margin-top:10px;
-  border-bottom:1px solid var(--border);scrollbar-width:thin}
-.tab{flex:0 0 auto;border:1px solid var(--border);background:var(--surface);color:var(--fg);
-  font:inherit;font-size:.9rem;padding:7px 14px;border-radius:999px;cursor:pointer;white-space:nowrap;
-  display:flex;align-items:center;gap:7px}
-.tab:hover{border-color:var(--accent)}
-.tab[aria-selected="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
-.tab .c{font-size:.75rem;background:var(--surface-2);color:var(--muted);border-radius:999px;padding:1px 7px}
-.tab[aria-selected="true"] .c{background:rgba(125,110,230,.3);color:var(--accent-ink)}
-
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:14px;padding-block:20px 48px}
-.card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px 14px;
-  display:flex;flex-direction:column;align-items:center;text-align:center;gap:9px;min-width:0}
-.ava{width:72px;height:72px;border-radius:50%;object-fit:cover;display:grid;place-items:center;
-  font-family:var(--font-disp);font-size:1.7rem;font-weight:700;color:#fff;flex:0 0 auto;overflow:hidden}
-.name{font-family:var(--font-disp);font-weight:600;font-size:1.02rem;line-height:1.3;word-break:break-word;min-width:0}
-.badge{font-size:.76rem;padding:3px 10px;border-radius:999px;font-weight:500}
-.r-dragon{color:var(--dragon);background:var(--dragon-bg)}.r-rabbit{color:var(--rabbit);background:var(--rabbit-bg)}
-.r-cat{color:var(--cat);background:var(--cat-bg)}.r-elf{color:var(--elf);background:var(--elf-bg)}
-.r-other{color:var(--muted);background:var(--surface-2)}
-.cnote{font-size:.82rem;color:var(--muted);word-break:break-word}
-.owner{font-size:.76rem;color:var(--muted)}.owner span{color:var(--fg)}
-.cardbtns{display:flex;gap:6px;margin-top:2px}
-.empty{color:var(--muted);text-align:center;padding:40px 0}
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>角色名冊</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- FontAwesome 圖示庫 -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&family=Noto+Serif+TC:wght@400;700&family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <!-- 自訂樣式 -->
+  <link rel="stylesheet" href="css/style.css">
 </head>
-<body>
-<div class="wrap">
-  <header>
-    <h1>角色名冊</h1>
-    <div class="stats">
-      <span><b id="st-char">0</b> 位角色</span>
-      <span><b id="st-owner">0</b> 位家長</span>
-      <span><b id="st-race">0</b> 種種族</span>
+<body id="appBody" class="bg-library-paper min-h-screen font-serif text-stone-900 p-4 sm:p-6 relative pb-24 transition-all duration-700">
+
+  <!-- 1. 頂部工具列 -->
+  <header id="headerBg" class="max-w-7xl mx-auto mb-6 flex flex-wrap items-center justify-between gap-4 p-4 rounded-md shadow-md border-2 border-amber-900/30 bg-[#fbf5e6] transition-all">
+    <div class="flex items-center gap-3">
+      <i id="headerIcon" class="fa-solid fa-book-bookmark text-2xl text-amber-800"></i>
+      <h1 id="headerTitle" class="text-xl font-bold tracking-wide">角色檔案館</h1>
+    </div>
+
+    <div class="flex flex-wrap items-center gap-4">
+      <!-- 版型選擇 -->
+      <div class="flex items-center gap-2">
+        <label for="themeSelector" class="text-xs font-bold opacity-80"><i class="fa-solid fa-palette mr-1"></i>版型：</label>
+        <select id="themeSelector" onchange="switchTheme(this.value)" class="bg-[#f4ebd0] border-2 border-amber-900/40 text-amber-950 text-xs rounded block p-2 outline-none cursor-pointer shadow-sm font-bold transition-all">
+          <option value="retro">📜 圖書館大書</option>
+          <option value="cyber">⚡ 賽博通緝牆</option>
+          <option value="white">⚪ 極簡純白</option>
+          <option value="dark">⚫ 極致純黑</option>
+        </select>
+      </div>
+
+      <!-- 家長篩選 -->
+      <div class="flex items-center gap-2">
+        <label for="parentFilter" class="text-xs font-bold opacity-80"><i class="fa-solid fa-filter mr-1"></i>家長：</label>
+        <select id="parentFilter" onchange="filterCards()" class="bg-[#f4ebd0] border-2 border-amber-900/40 text-amber-950 text-xs rounded block p-2 outline-none cursor-pointer shadow-sm font-bold transition-all">
+          <option value="ALL">全部顯示</option>
+        </select>
+      </div>
     </div>
   </header>
 
-  <div id="app" hidden>
-    <div class="panel">
-      <h2 id="form-title">新增角色</h2>
-      <form class="form" id="form">
-        <div class="field"><label for="f-owner">家長</label><input id="f-owner" placeholder="誰的角色"></div>
-        <div class="field"><label for="f-name">角色名 / 綽號 *</label><input id="f-name" required placeholder="必填"></div>
-        <div class="field"><label for="f-race">種族</label>
-          <input id="f-race" list="races" placeholder="如 兔男、龍女">
-          <datalist id="races"><option value="龍女"><option value="兔男"><option value="貓男"><option value="男精"></datalist>
+  <!-- 2. 列表區域 -->
+  <main class="max-w-7xl mx-auto" id="mainContainer">
+
+    <!-- 模式 A：圖書館大書 (每頁左右各 9 筆，共 18 筆) -->
+    <div id="bookView" class="w-full bg-[#fbf5e6] border-4 border-amber-900/40 rounded-sm shadow-2xl p-6 md:p-10 relative">
+      <div class="absolute inset-y-0 left-1/2 w-12 -ml-6 bg-gradient-to-r from-transparent via-amber-950/20 to-transparent pointer-events-none z-10 hidden md:block"></div>
+
+      <div id="bookPagesContainer" class="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12 book-page-turn">
+        <div class="pr-0 md:pr-6 border-b md:border-b-0 md:border-r border-amber-900/20 pb-6 md:pb-0 flex flex-col justify-between">
+          <div>
+            <div class="flex justify-between items-center pb-2 border-b-2 border-amber-900/30 mb-4">
+              <span class="text-xs text-amber-900 font-bold tracking-widest"><i class="fa-solid fa-book-open mr-1"></i> FOLIO LEFT ― 檔案卷宗左頁</span>
+            </div>
+            <div id="leftBookGrid" class="grid grid-cols-2 sm:grid-cols-3 gap-3"></div>
+          </div>
         </div>
-        <div class="field"><label for="f-ava">證件照 / 頭貼</label><input id="f-ava" type="file" accept="image/*"></div>
-        <div class="field full"><label for="f-note">備註</label><textarea id="f-note" placeholder="設定、個性、其他想記的事"></textarea></div>
-        <div class="field full actions">
-          <button class="btn" type="submit" id="submit-btn">新增</button>
-          <button class="btn ghost" type="button" id="cancel-btn" hidden>取消編輯</button>
-          <span class="msg" id="form-msg"></span>
+        <div class="pl-0 md:pl-6 flex flex-col justify-between">
+          <div>
+            <div class="flex justify-between items-center pb-2 border-b-2 border-amber-900/30 mb-4">
+              <span class="text-xs text-amber-900 font-bold tracking-widest"><i class="fa-solid fa-book-open mr-1"></i> FOLIO RIGHT ― 檔案卷宗右頁</span>
+            </div>
+            <div id="rightBookGrid" class="grid grid-cols-2 sm:grid-cols-3 gap-3"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex justify-between items-center pt-6 border-t-2 border-amber-900/30 mt-8 text-xs font-bold text-amber-900">
+        <button onclick="prevBookPage()" class="hover:text-amber-600 flex items-center gap-1 transition px-3 py-1.5 bg-amber-900/10 rounded"><i class="fa-solid fa-chevron-left"></i> 上一頁</button>
+        <span id="pageIndicator" class="tracking-widest text-sm font-black">PAGE 1 / 1</span>
+        <button onclick="nextBookPage()" class="hover:text-amber-600 flex items-center gap-1 transition px-3 py-1.5 bg-amber-900/10 rounded">下一頁 <i class="fa-solid fa-chevron-right"></i></button>
+      </div>
+    </div>
+
+    <!-- 模式 B、C、D：網格列表 -->
+    <div id="gridView" class="hidden grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8"></div>
+  </main>
+
+  <!-- 3. 右下角浮動新增按鈕 -->
+  <button id="fabBtn" onclick="openAddModal()" class="fixed bottom-6 right-6 z-40 bg-amber-800 text-amber-100 w-14 h-14 rounded-lg shadow-2xl border-2 border-amber-600 flex items-center justify-center text-xl active:scale-95 transition-all">
+    <i id="fabIcon" class="fa-solid fa-plus"></i>
+  </button>
+
+  <!-- 4. 詳情彈窗：上面設定、下面故事 -->
+  <div id="cardModal" class="fixed inset-0 z-50 bg-stone-950/80 backdrop-blur-md hidden items-center justify-center p-4">
+    <button onclick="closeModal('cardModal')" class="absolute top-6 right-6 text-white text-3xl hover:text-amber-400 transition z-50"><i class="fa-solid fa-xmark"></i></button>
+    <div id="modalBox" class="w-full max-w-lg h-[480px] bg-stone-50 rounded-xl shadow-2xl p-6 border-2 border-stone-300 flex flex-col justify-between relative transition-all">
+      <div class="flex items-center justify-between border-b pb-3 mb-4">
+        <div>
+          <h2 id="modalName" class="text-xl font-bold">角色名字</h2>
+          <p id="modalSubInfo" class="text-xs font-medium mt-0.5 opacity-80">種族：- ｜ 家長：-</p>
+        </div>
+        <span class="text-[10px] uppercase font-bold tracking-widest opacity-60 px-2 py-1 rounded bg-stone-200/50">Details</span>
+      </div>
+      <div class="flex-1 flex flex-col gap-4 overflow-hidden">
+        <div id="modalTopBox" class="bg-white p-3.5 rounded-lg border border-stone-200 shadow-sm text-xs">
+          <div class="font-bold border-b pb-1.5 mb-2"><i class="fa-solid fa-sliders text-amber-600 mr-1"></i>角色設定</div>
+          <p id="modalSetting" class="leading-relaxed whitespace-pre-wrap overflow-y-auto pr-1 custom-scrollbar" style="max-height:120px">-</p>
+        </div>
+        <div id="modalBottomBox" class="bg-white p-3.5 rounded-lg border border-stone-200 shadow-sm text-xs flex-1 flex flex-col overflow-hidden">
+          <div class="font-bold border-b pb-1.5 mb-2"><i class="fa-solid fa-book-open mr-1"></i>背景故事</div>
+          <p id="modalStory" class="leading-relaxed whitespace-pre-wrap overflow-y-auto pr-1 custom-scrollbar">故事載入中...</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 5. 新增 / 編輯角色 Modal -->
+  <div id="formModal" class="fixed inset-0 z-50 bg-stone-950/80 backdrop-blur-md hidden items-center justify-center p-4">
+    <button onclick="closeModal('formModal')" class="absolute top-6 right-6 text-white text-3xl hover:text-amber-400 transition z-50"><i class="fa-solid fa-xmark"></i></button>
+    <div id="formModalBox" class="w-full max-w-lg bg-[#fbf5e6] rounded-md shadow-2xl p-6 border-4 border-amber-900/40 flex flex-col gap-4 relative max-h-[90vh] overflow-y-auto transition-all text-stone-900">
+      <h2 id="formModalTitle" class="text-xl font-bold border-b pb-2">新增角色</h2>
+      <form id="characterForm" onsubmit="handleFormSubmit(event)" class="space-y-3.5 text-xs">
+        <input type="hidden" id="editIndex" value="-1">
+
+        <!-- 角色名 -->
+        <div>
+          <label class="block font-bold mb-1">角色名 / 綽號：</label>
+          <input type="text" id="formName" required placeholder="例如：淡皋" class="form-input w-full p-2 rounded outline-none transition-all">
+        </div>
+
+        <!-- 家長 & 種族 -->
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block font-bold mb-1">家長：</label>
+            <input type="text" id="formParent" placeholder="例如：77" class="form-input w-full p-2 rounded outline-none transition-all">
+          </div>
+          <div>
+            <label class="block font-bold mb-1">種族：</label>
+            <input type="text" id="formRace" placeholder="例如：兔男、龍女" class="form-input w-full p-2 rounded outline-none transition-all">
+          </div>
+        </div>
+
+        <!-- 頭貼上傳 -->
+        <div>
+          <label class="block font-bold mb-1">頭貼（上傳圖片，留空則用預設圖）：</label>
+          <div class="flex items-center gap-2">
+            <input type="file" id="formFileInput" accept="image/*" onchange="handleFileUpload(event)" class="hidden">
+            <button type="button" onclick="document.getElementById('formFileInput').click()" id="uploadBtn" class="form-btn px-3 py-2 rounded font-bold transition shrink-0"><i class="fa-solid fa-upload mr-1"></i>選擇檔案</button>
+            <input type="text" id="formImg" placeholder="或貼上圖片網址 https://..." class="form-input w-full p-2 rounded outline-none transition-all">
+          </div>
+          <div id="imagePreviewContainer" class="mt-2 hidden items-center gap-2">
+            <img id="imagePreview" src="" class="w-12 h-12 object-cover rounded border border-amber-900/30">
+            <span class="text-[10px] opacity-70">圖片已選取</span>
+          </div>
+        </div>
+
+        <!-- 設定 -->
+        <div>
+          <label class="block font-bold mb-1">設定（年齡 / 個性 / 特徵等）：</label>
+          <textarea id="formSetting" rows="2" placeholder="例如：外表年齡 20 / 沉靜寡言 / 喜歡甜食" class="form-input w-full p-2 rounded outline-none custom-scrollbar transition-all"></textarea>
+        </div>
+
+        <!-- 故事 -->
+        <div>
+          <label class="block font-bold mb-1">故事：</label>
+          <textarea id="formStory" rows="4" placeholder="角色的背景故事與經歷..." class="form-input w-full p-2 rounded outline-none custom-scrollbar transition-all"></textarea>
+        </div>
+
+        <div class="flex justify-end gap-3 pt-3 border-t border-stone-300/40">
+          <button type="button" onclick="closeModal('formModal')" id="cancelBtn" class="px-4 py-2 rounded font-bold transition">取消</button>
+          <button type="submit" id="saveBtn" class="px-5 py-2 rounded font-bold shadow transition">儲存角色</button>
         </div>
       </form>
     </div>
-
-    <div class="toolbar">
-      <button class="btn ghost sm" id="import-btn" type="button">⬇ 從 Google 試算表匯入現有角色</button>
-      <span class="msg" id="import-msg"></span>
-    </div>
-
-    <div class="tabs" id="tabs" role="tablist"></div>
-    <div class="grid" id="grid"></div>
   </div>
-</div>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<script>
-/* ========= 1. 你的 Supabase 設定(改這兩行) ========= */
-const SUPABASE_URL = "https://ipuccqwdljlecfehsjpn.supabase.co";
-const SUPABASE_ANON_KEY = "sb_publishable_icxhi9NXTHJpCvoftuXXNw_epPMAZiu";
-/* 想用「一鍵匯入」就填你的試算表 ID(網址 /d/ 後面那串) */
-const SHEET_ID = "1bLLdaiUOdhQf9qHReg1N2fknEhCBU4TOJmwATcwbIMg";
-/* =================================================== */
-
-let db=null, rows=[], active=0, editingId=null;
-const $=id=>document.getElementById(id);
-const esc=s=>String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
-
-function configured(){return !SUPABASE_URL.includes("YOUR-PROJECT") && !SUPABASE_ANON_KEY.includes("YOUR-ANON-KEY");}
-function raceClass(r){r=r||"";if(r.includes("龍"))return"r-dragon";if(r.includes("兔"))return"r-rabbit";if(r.includes("貓"))return"r-cat";if(r.includes("精"))return"r-elf";return"r-other";}
-function raceVar(r){r=r||"";if(r.includes("龍"))return"var(--dragon)";if(r.includes("兔"))return"var(--rabbit)";if(r.includes("貓"))return"var(--cat)";if(r.includes("精"))return"var(--elf)";return"var(--accent)";}
-function initial(n){const ch=[...(n||"?")].find(c=>/[^\s\/·.。、,，]/.test(c));return ch||"?";}
-function ownerName(o){return (o&&o.trim())?o.trim():"未分類";}
-function owners(){const s=[];for(const r of rows){const o=ownerName(r.owner);if(!s.includes(o))s.push(o);}return s;}
-
-function render(){
-  $("st-char").textContent=rows.length;
-  $("st-owner").textContent=owners().length;
-  $("st-race").textContent=new Set(rows.map(r=>raceClass(r.race))).size;
-  const os=owners();
-  if(active>os.length)active=0;
-  const mk=(label,count,idx)=>`<button class="tab" role="tab" aria-selected="${active===idx}" onclick="selectTab(${idx})">${esc(label)}<span class="c">${count}</span></button>`;
-  let t=mk("全部",rows.length,0);
-  os.forEach((o,i)=>{t+=mk(o,rows.filter(r=>ownerName(r.owner)===o).length,i+1);});
-  $("tabs").innerHTML=t;
-  const list=active===0?rows:rows.filter(r=>ownerName(r.owner)===os[active-1]);
-  if(!list.length){$("grid").innerHTML=`<div class="empty" style="grid-column:1/-1">還沒有角色,用上面的表單新增第一個吧。</div>`;return;}
-  $("grid").innerHTML=list.map(r=>{
-    const ava=r.avatar_url
-      ? `<img class="ava" src="${esc(r.avatar_url)}" alt="${esc(r.name)}">`
-      : `<div class="ava" style="background:linear-gradient(135deg,${raceVar(r.race)},${raceVar(r.race)}99)">${esc(initial(r.name))}</div>`;
-    return `<div class="card">
-      ${ava}
-      <div class="name">${esc(r.name)}</div>
-      ${r.race?`<div class="badge ${raceClass(r.race)}">${esc(r.race)}</div>`:""}
-      ${active===0?`<div class="owner">家長 · <span>${esc(ownerName(r.owner))}</span></div>`:""}
-      ${r.note?`<div class="cnote">${esc(r.note)}</div>`:""}
-      <div class="cardbtns">
-        <button class="btn ghost sm" onclick="startEdit('${r.id}')">編輯</button>
-        <button class="btn danger sm" onclick="del('${r.id}','${esc(r.name)}')">刪除</button>
+  <!-- 6. 刪除確認 Modal -->
+  <div id="deleteModal" class="fixed inset-0 z-50 bg-stone-950/80 backdrop-blur-md hidden items-center justify-center p-4">
+    <div id="deleteModalBox" class="w-full max-w-sm rounded-xl shadow-2xl p-6 text-center space-y-4 border transition-all">
+      <div class="text-rose-500 text-4xl"><i class="fa-solid fa-triangle-exclamation"></i></div>
+      <h3 class="text-lg font-bold">確定要刪除此角色？</h3>
+      <p id="deleteTargetName" class="text-xs font-bold opacity-80">角色名稱</p>
+      <div class="flex justify-center gap-3 pt-2">
+        <button onclick="closeModal('deleteModal')" id="deleteCancelBtn" class="px-4 py-2 rounded font-bold text-xs transition">取消</button>
+        <button onclick="executeDelete()" class="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded font-bold text-xs shadow transition">確認刪除</button>
       </div>
-    </div>`;}).join("");
-}
-window.selectTab=i=>{active=i;render();};
+    </div>
+  </div>
 
-async function load(){
-  const {data,error}=await db.from("characters").select("*").order("created_at",{ascending:true});
-  if(error){$("form-msg").textContent="讀取失敗:"+error.message;return;}
-  rows=data||[];render();
-}
-
-async function uploadAvatar(file){
-  const ext=(file.name.split(".").pop()||"png").toLowerCase();
-  const path=crypto.randomUUID()+"."+ext;
-  const {error}=await db.storage.from("avatars").upload(path,file,{upsert:false});
-  if(error)throw error;
-  return db.storage.from("avatars").getPublicUrl(path).data.publicUrl;
-}
-
-$("form").addEventListener("submit",async e=>{
-  e.preventDefault();
-  const btn=$("submit-btn");btn.disabled=true;
-  const msg=$("form-msg");msg.textContent="處理中…";
-  try{
-    const rec={owner:$("f-owner").value.trim(),name:$("f-name").value.trim(),
-      race:$("f-race").value.trim(),note:$("f-note").value.trim()};
-    const file=$("f-ava").files[0];
-    if(file)rec.avatar_url=await uploadAvatar(file);
-    if(editingId){
-      const {error}=await db.from("characters").update(rec).eq("id",editingId);
-      if(error)throw error;
-    }else{
-      const {error}=await db.from("characters").insert(rec);
-      if(error)throw error;
-    }
-    resetForm();msg.textContent="已儲存 ✓";await load();
-  }catch(err){msg.textContent="失敗:"+(err.message||err);}
-  finally{btn.disabled=false;}
-});
-
-window.startEdit=id=>{
-  const r=rows.find(x=>x.id===id);if(!r)return;
-  editingId=id;
-  $("f-owner").value=r.owner||"";$("f-name").value=r.name||"";
-  $("f-race").value=r.race||"";$("f-note").value=r.note||"";$("f-ava").value="";
-  $("form-title").textContent="編輯角色";$("submit-btn").textContent="更新";
-  $("cancel-btn").hidden=false;$("form-msg").textContent="(不選檔案則保留原頭貼)";
-  window.scrollTo({top:0,behavior:"smooth"});
-};
-$("cancel-btn").addEventListener("click",resetForm);
-function resetForm(){
-  editingId=null;$("form").reset();
-  $("form-title").textContent="新增角色";$("submit-btn").textContent="新增";
-  $("cancel-btn").hidden=true;$("form-msg").textContent="";
-}
-
-window.del=async(id,name)=>{
-  if(!window.confirm(`確定刪除「${name}」?`))return;
-  const {error}=await db.from("characters").delete().eq("id",id);
-  if(error){alert("刪除失敗:"+error.message);return;}
-  await load();
-};
-
-/* ---- 一鍵從 Google 試算表匯入(照片除外) ---- */
-function parseCSV(text){const rows=[];let row=[],f="",q=false;for(let i=0;i<text.length;i++){const c=text[i];
-  if(q){if(c=='"'){if(text[i+1]=='"'){f+='"';i++;}else q=false;}else f+=c;}
-  else{if(c=='"')q=true;else if(c==','){row.push(f);f="";}else if(c=='\n'){row.push(f);rows.push(row);row=[];f="";}else if(c=='\r'){}else f+=c;}}
-  if(f.length||row.length){row.push(f);rows.push(row);}return rows;}
-$("import-btn").addEventListener("click",async()=>{
-  const m=$("import-msg");m.textContent="讀取試算表中…";
-  try{
-    const url=`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&gid=0`;
-    const csv=await (await fetch(url)).text();
-    const rr=parseCSV(csv);
-    let start=rr.findIndex(r=>r.some(c=>c&&c.includes("家長")));if(start<0)throw new Error("找不到標題列");
-    let owner="";const incoming=[];
-    for(let i=start+1;i<rr.length;i++){const r=rr[i];const o=(r[0]||"").trim(),n=(r[1]||"").trim(),race=(r[2]||"").trim();
-      if(o)owner=o;if(!n&&!race)continue;incoming.push({owner,name:n||owner,race});}
-    const have=new Set(rows.map(r=>ownerName(r.owner)+"|"+r.name));
-    const toAdd=incoming.filter(r=>!have.has(ownerName(r.owner)+"|"+r.name));
-    if(!toAdd.length){m.textContent="沒有新角色可匯入(都已存在)。";return;}
-    const {error}=await db.from("characters").insert(toAdd);
-    if(error)throw error;
-    m.textContent=`已匯入 ${toAdd.length} 位角色(頭貼需另外上傳)。`;await load();
-  }catch(err){m.textContent="匯入失敗:"+(err.message||err);}
-});
-
-/* ---- 啟動 ---- */
-if(!configured()){
-  $("setup").hidden=false;
-}else{
-  db=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
-  $("app").hidden=false;
-  load();
-  db.channel("characters-realtime")
-    .on("postgres_changes",{event:"*",schema:"public",table:"characters"},load)
-    .subscribe();
-}
-</script>
+  <!-- 腳本:先載 Supabase,再載設定,最後載邏輯 -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+  <script src="js/config.js"></script>
+  <script src="js/app.js"></script>
 </body>
 </html>
