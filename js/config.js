@@ -5,4 +5,4 @@ const SUPABASE_URL = "https://ipuccqwdljlecfehsjpn.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_icxhi9NXTHJpCvoftuXXNw_epPMAZiu";
 
 // 沒有上傳頭貼時顯示的預設圖片(放在 GitHub 的 img/yan.png)
-const DEFAULT_IMG = "img/yan.png";
+const DEFAULT_IMG = "img/YAN.png";
