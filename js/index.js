@@ -1,6 +1,3 @@
-
-// === 只要改這個檔就好 ===
-
 // Supabase 專案網址(不要加 /rest/v1/)
 const SUPABASE_URL = "https://ipuccqwdljlecfehsjpn.supabase.co";
 
